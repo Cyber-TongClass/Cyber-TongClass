@@ -120,7 +120,16 @@ Database (Convex) → API (TypeScript) → Next.js → Shadcn/UI → Browser
 ### 注册流程
 
 1. Admin/SuperAdmin 预存学号数据库（哈希）
-2. Member注册时 输入组织 + 学号 + 邮箱（学号@stu.pku.edu.cn）
+2. Member注册时 下拉框选择组织，输入 学号 + 邮箱（学号@stu.pku.edu.cn）
+    - 下拉框为二级下拉框，分别为
+        - 北大通班
+            - 2020级
+            - 2021级
+            - ...到今年（2025级）
+        - 清华通班
+            - 2020级
+            - 2021级
+            - ...到今年（2025级）
 3. call一次邮件验证（这里先保留接口，暂时不完成）
 4. 输入验证码并设置密码
 5. 完善资料
@@ -314,7 +323,7 @@ tongclass.ac.cn/users/
 数据库表/list页面：
 
 - news
-    - list可以是列表式，展示title/署名/time
+    - list可以是列表式，展示title/署名/分类/time
     - 只有admin及以上权限才能编写发布
     - 编写时调用markdown编辑器，左侧md右侧实时渲染
     - 新闻title/署名/time都可以被手动指定，title必填，其余不必须，留空则默认发表者英文名+当前时间。
@@ -322,6 +331,7 @@ tongclass.ac.cn/users/
 
 - events
     - 每个event一个block，block里有event名称/时间（或时间段）
+    - 每个block可以点开到page里面除了上面的信息外还有location和description
     - event将在日历组建中展示，不同event具有不同的颜色，用户可以在日历里点击每个色块以显示活动名称/简介/详情链接（「查看更多」按钮）。点开查看更多按钮后，可以跳转到event页面，该页面即在list中直接点进该event的page。
 
 四个页面：
@@ -349,7 +359,7 @@ tongclass.ac.cn/users/
 
 - 动态
 - 成员
-- 成果（所有人的成果汇总的list，可按照名称/领域/发布时间排序，可搜索作者/题目）
+- 成果
 - 资源（需登录才显示）
 - 活动
 - 关于
@@ -361,15 +371,14 @@ tongclass.ac.cn/users/
 1. 轮播新闻 Banner
 2. 简介区
 3. 最新新闻
-4. 研究方向（可选）
 
 ---
 
 ### 新闻页
 
 支持：
-
 - 分类筛选
+- 按发布者筛选
 - 时间筛选
 - 时间轴布局
 
@@ -383,10 +392,13 @@ tongclass.ac.cn/users/
 2. 年级（新→旧）
 3. 拼音
 
+- 可筛选tag
+- list里每个人的行都可以点进其member homepage
+
 ---
 
 ### 成果页
-
+所有人的成果汇总的list
 模块：
 
 - Latest Works
@@ -394,8 +406,8 @@ tongclass.ac.cn/users/
 
 支持：
 
-- 搜索
-- 标签过滤
+- 可搜索作者/题目
+- 可按照名称/领域/发布时间排序和筛选
 
 ---
 
@@ -403,7 +415,7 @@ tongclass.ac.cn/users/
 
 博客风格
 
-重点：课程测评设计
+重点：课程测评论坛
 
 ---
 
