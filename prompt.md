@@ -19,7 +19,7 @@ Prompt
     - todo.md 后续更新可继续扩展的内容。
 
     文件中要有对应功能的实现文件引用；doc结构要方便后续继续append。
-4. 要有统一的工程样式库，例如配色/样式库。在使用的时候可以从中进行选择，如果要创建新工具及时增加到样式库中。
+4. 要有统一的工程样式库，例如配色/样式库。在使用的时候可以从中进行选择，如果要创建新工具及时增加到样式库中。全站容器宽度、间距规范。
 5. **每次开始完成一项任务必须新建git分支；每实现一个功能/增加一种tool/配色或者样式或者api，都需要进行commit并push到develop分支。每次开始新工程编辑时，要及时从develop更新最新的commit。**
 6. 用户进行高危操作时需要弹窗二次确认。
 
@@ -48,7 +48,7 @@ The goal of the site is to look sleek, premium, and minimalist, like aspa in Swi
 
 Design this in a way that matches what a working professional would reasonably pay thousands of dollars a month for, in a way that would make Steve Jobs smile.
 
-Avoid using colors unnecessarily, instead pick from a palette that is cohesive and stick to it. Ensure the site is responsive and elegant onboth desktop and mobile.
+Avoid using colors unnecessarily, instead pick from a palette that is cohesive and stick to it. Ensure the site is responsive and elegant on both desktop and mobile.
 
 ---
 
@@ -120,9 +120,9 @@ Database (Convex) → API (TypeScript) → Next.js → Shadcn/UI → Browser
 ### 注册流程
 
 1. Admin/SuperAdmin 预存学号数据库（哈希）
-2. Member注册时 下拉框选择组织，输入 学号 + 邮箱（学号@stu.pku.edu.cn）
+2. Member注册时 下拉框选择组织，输入 学号 + 邮箱
     - 下拉框为二级下拉框，分别为
-        - 北大通班
+        - 北大通班（学号@stu.pku.edu.cn）
             - 2020级
             - 2021级
             - ...到今年（2025级）
@@ -134,7 +134,7 @@ Database (Convex) → API (TypeScript) → Next.js → Shadcn/UI → Browser
 4. 输入验证码并设置密码
 5. 完善资料
     - 英文名（展示在主页）
-    - 用户名（可用于用户名+密码登录，不公开展示）
+    - 用户名（可用于用户名+密码登录，登录时映射到对应的email，用户名唯一且不公开展示）
     - 个人邮箱（不默认作为登录邮箱）
     - 自我介绍（markdown实时左侧编辑右侧渲染）
     - 研究兴趣
@@ -324,15 +324,16 @@ tongclass.ac.cn/users/
 
 - news
     - list可以是列表式，展示title/署名/分类/time
+        - 分类如官方公告、成果发布、活动回顾等等
     - 只有admin及以上权限才能编写发布
     - 编写时调用markdown编辑器，左侧md右侧实时渲染
-    - 新闻title/署名/time都可以被手动指定，title必填，其余不必须，留空则默认发表者英文名+当前时间。
+    - 新闻title/署名/time都可以被手动指定，title、分类必填，其余不必须，留空则默认发表者英文名+当前时间。
     - admin可以编辑/撤回已经发表的新闻。
 
 - events
     - 每个event一个block，block里有event名称/时间（或时间段）
     - 每个block可以点开到page里面除了上面的信息外还有location和description
-    - event将在日历组建中展示，不同event具有不同的颜色，用户可以在日历里点击每个色块以显示活动名称/简介/详情链接（「查看更多」按钮）。点开查看更多按钮后，可以跳转到event页面，该页面即在list中直接点进该event的page。
+    - event将在日历组件中展示，不同event具有不同的颜色，固定映射并存colorKey，用户可以在日历里点击每个色块以显示活动名称/简介/详情链接（「查看更多」按钮）。点开查看更多按钮后，可以跳转到event页面，该页面即在list中直接点进该event的page。
 
 四个页面：
 
@@ -350,7 +351,7 @@ tongclass.ac.cn/users/
 
 包含：
 
-- Logo（已放置到repo中，名为logo.md）
+- Logo（已放置到repo中，名为logo.png）
 - 菜单
 - 搜索栏
 - 登录按钮
