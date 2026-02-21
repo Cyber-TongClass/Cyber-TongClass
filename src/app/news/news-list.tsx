@@ -1,0 +1,179 @@
+"use client"
+
+import { useState, useMemo } from "react"
+import Link from "next/link"
+import { Search, FileText, Calendar, User } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+
+// Mock data - will be replaced with Convex API
+const mockNews = [
+  {
+    id: "1",
+    title: "通班学生获ICML最佳论文奖",
+    content: "恭喜通班学生XXX在ICML 2024获得最佳论文奖...",
+    authorName: "Zhang Wei",
+    category: "学术成果",
+    publishedAt: "2024-01-15",
+    isPublished: true,
+  },
+  {
+    id: "2",
+    title: "2024年春季学期课程安排发布",
+    content: "2024年春季学期课程安排已发布，请同学们查看...",
+    authorName: "Admin",
+    category: "课程安排",
+    publishedAt: "2024-01-10",
+    isPublished: true,
+  },
+  {
+    id: "3",
+    title: "通班学术沙龙圆满结束",
+    content: "上周举办的通班学术沙龙活动圆满结束...",
+    authorName: "Li Ming",
+    category: "活动回顾",
+    publishedAt: "2024-01-05",
+    isPublished: true,
+  },
+  {
+    id: "4",
+    title: "新学期新生见面会",
+    content: "欢迎新同学加入通班大家庭...",
+    authorName: "Admin",
+    category: "通知公告",
+    publishedAt: "2024-01-01",
+    isPublished: true,
+  },
+]
+
+const categories = [
+  { value: "all", label: "全部分类" },
+  { value: "学术成果", label: "学术成果" },
+  { value: "课程安排", label: "课程安排" },
+  { value: "活动回顾", label: "活动回顾" },
+  { value: "通知公告", label: "通知公告" },
+]
+
+export function NewsList() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest")
+
+  const filteredNews = useMemo(() => {
+    return mockNews.filter((news) => {
+      // Search filter
+      if (searchQuery && !news.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false
+      }
+      // Category filter
+      if (selectedCategory !== "all" && news.category !== selectedCategory) {
+        return false
+      }
+      return true
+    })
+  }, [searchQuery, selectedCategory])
+
+  const sortedNews = useMemo(() => {
+    return [...filteredNews].sort((a, b) => {
+      const dateA = new Date(a.publishedAt).getTime()
+      const dateB = new Date(b.publishedAt).getTime()
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB
+    })
+  }, [filteredNews, sortOrder])
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="搜索新闻..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="flex h-10 w-full md:w-[160px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+            className="flex h-10 w-full md:w-[140px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="newest">最新优先</option>
+            <option value="oldest">最早优先</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Results count */}
+      <div className="text-sm text-muted-foreground">
+        共 {sortedNews.length} 条新闻
+      </div>
+
+      {/* News list - Timeline style */}
+      {sortedNews.length > 0 ? (
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-px" />
+          
+          <div className="space-y-6">
+            {sortedNews.map((news, index) => (
+              <div key={news.id} className={`relative flex flex-col md:flex-row ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                {/* Timeline dot */}
+                <div className="absolute left-4 md:left-1/2 w-3 h-3 rounded-full bg-primary -translate-x-1/2 mt-6 z-10" />
+                
+                {/* Content */}
+                <div className="ml-10 md:ml-0 md:w-[calc(50%-2rem)]">
+                  <Link href={`/news/${news.id}`}>
+                    <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer card-hover">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                          <span className="text-primary font-medium">{news.category}</span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {news.publishedAt}
+                          </span>
+                        </div>
+                        <CardTitle className="text-xl line-clamp-2">{news.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {news.content}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          {news.authorName}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+                
+                {/* Spacer for alternate layout */}
+                <div className="hidden md:block md:w-[calc(50%-2rem)]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">未找到新闻</h3>
+          <p className="text-muted-foreground">请尝试调整搜索条件</p>
+        </div>
+      )}
+    </div>
+  )
+}
