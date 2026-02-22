@@ -1,3 +1,14 @@
+/**
+ * @deprecated 此文件已弃用，请使用 @/lib/hooks/useAuth hook 替代
+ * 
+ * 此文件保留用于向后兼容，最终将被移除。
+ * 
+ * 使用示例:
+ *   - 使用 useAuth() hook 获取当前用户信息
+ *   - 使用 login() 函数进行登录
+ *   - 使用 signOut() 进行登出
+ */
+
 "use client"
 
 import type { User, UserRole } from "@/types"
@@ -131,6 +142,35 @@ export type RegisterInput = {
   personalEmail?: string
   bio?: string
   researchInterests?: string[]
+  titles?: { title: string; link: string }[]
+}
+
+type ManagedUserUpdates = Partial<
+  Pick<
+    User,
+    | "email"
+    | "username"
+    | "englishName"
+    | "organization"
+    | "cohort"
+    | "studentId"
+    | "personalEmail"
+    | "bio"
+    | "researchInterests"
+    | "titles"
+    | "scholarUrl"
+    | "orcidUrl"
+    | "avatar"
+    | "realPhoto"
+    | "role"
+  >
+>
+
+type ManagedUserCreateInput = Pick<
+  User,
+  "email" | "username" | "englishName" | "organization" | "cohort" | "studentId" | "role"
+> & {
+  password: string
 }
 
 export const register = (input: RegisterInput): { ok: true; user: AuthUser } | { ok: false; error: string } => {
@@ -170,7 +210,7 @@ export const register = (input: RegisterInput): { ok: true; user: AuthUser } | {
     personalEmail: input.personalEmail?.trim() || undefined,
     bio: input.bio?.trim() || undefined,
     researchInterests: input.researchInterests?.filter(Boolean) || [],
-    titles: [],
+    titles: input.titles?.filter((item) => item.title && item.link) || [],
     scholarUrl: "",
     orcidUrl: "",
     avatar: "",
@@ -227,6 +267,143 @@ export const getCurrentUser = (): AuthUser | null => {
   return current ? toAuthUser(current) : null
 }
 
+export const getAllUsers = (): AuthUser[] => {
+  const store = readStore()
+  return store.users.map(toAuthUser)
+}
+
+export const getUserById = (userId: string): AuthUser | null => {
+  const store = readStore()
+  const user = store.users.find((item) => item._id === userId)
+  return user ? toAuthUser(user) : null
+}
+
+export const createUserByAdmin = (
+  input: ManagedUserCreateInput
+): { ok: true; user: AuthUser } | { ok: false; error: string } => {
+  const store = readStore()
+
+  const email = input.email.trim().toLowerCase()
+  const username = input.username.trim().toLowerCase()
+  const studentId = input.studentId.trim()
+  const englishName = input.englishName.trim()
+  const password = input.password.trim()
+
+  if (!email || !username || !studentId || !englishName || !password) {
+    return { ok: false, error: "Please complete all required fields." }
+  }
+
+  if (!validateSchoolEmail(input.organization, email, studentId)) {
+    return { ok: false, error: "School email does not match organization and student ID." }
+  }
+
+  if (store.users.some((u) => u.email.toLowerCase() === email)) {
+    return { ok: false, error: "This school email is already registered." }
+  }
+  if (store.users.some((u) => u.username.toLowerCase() === username)) {
+    return { ok: false, error: "This username is already taken." }
+  }
+  if (store.users.some((u) => u.studentId === studentId)) {
+    return { ok: false, error: "This student ID is already registered." }
+  }
+
+  const user: StoredUser = {
+    _id: `user-${now()}`,
+    email,
+    username,
+    englishName,
+    role: input.role,
+    organization: input.organization,
+    cohort: input.cohort,
+    studentId,
+    personalEmail: undefined,
+    bio: undefined,
+    researchInterests: [],
+    titles: [],
+    scholarUrl: "",
+    orcidUrl: "",
+    avatar: "",
+    createdAt: now(),
+    updatedAt: now(),
+    password,
+    isEmailVerified: true,
+  }
+
+  writeStore({
+    ...store,
+    users: [...store.users, user],
+  })
+
+  return { ok: true, user: toAuthUser(user) }
+}
+
+export const updateUserById = (
+  userId: string,
+  updates: ManagedUserUpdates
+): { ok: true; user: AuthUser } | { ok: false; error: string } => {
+  const store = readStore()
+  const index = store.users.findIndex((user) => user._id === userId)
+
+  if (index < 0) {
+    return { ok: false, error: "User not found." }
+  }
+
+  const email = updates.email?.trim().toLowerCase()
+  const username = updates.username?.trim().toLowerCase()
+  const studentId = updates.studentId?.trim()
+
+  if (email && store.users.some((user, idx) => idx !== index && user.email.toLowerCase() === email)) {
+    return { ok: false, error: "This school email is already registered." }
+  }
+
+  if (username && store.users.some((user, idx) => idx !== index && user.username.toLowerCase() === username)) {
+    return { ok: false, error: "This username is already taken." }
+  }
+
+  if (studentId && store.users.some((user, idx) => idx !== index && user.studentId === studentId)) {
+    return { ok: false, error: "This student ID is already registered." }
+  }
+
+  const users = [...store.users]
+  users[index] = {
+    ...users[index],
+    ...updates,
+    ...(email ? { email } : {}),
+    ...(username ? { username } : {}),
+    ...(studentId ? { studentId } : {}),
+    updatedAt: now(),
+  }
+
+  const nextStore: AuthStore = {
+    ...store,
+    users,
+  }
+  writeStore(nextStore)
+
+  return { ok: true, user: toAuthUser(users[index]) }
+}
+
+export const deleteUserById = (userId: string): { ok: true } | { ok: false; error: string } => {
+  const store = readStore()
+  const exists = store.users.some((user) => user._id === userId)
+
+  if (!exists) {
+    return { ok: false, error: "User not found." }
+  }
+
+  const users = store.users.filter((user) => user._id !== userId)
+  if (users.length === 0) {
+    return { ok: false, error: "Cannot delete all users." }
+  }
+
+  writeStore({
+    users,
+    currentUserId: store.currentUserId === userId ? null : store.currentUserId,
+  })
+
+  return { ok: true }
+}
+
 export const updateCurrentUser = (
   updates: Partial<
     Pick<
@@ -239,6 +416,7 @@ export const updateCurrentUser = (
       | "scholarUrl"
       | "orcidUrl"
       | "avatar"
+      | "realPhoto"
     >
   >
 ): { ok: true; user: AuthUser } | { ok: false; error: string } => {

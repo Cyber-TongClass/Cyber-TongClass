@@ -1,7 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -19,79 +20,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { useConfirmDialog } from "@/components/ui/confirm-dialog"
 import { MoreHorizontal, Plus, Search, Filter, Trash2, Edit, Eye } from "lucide-react"
-
-// Mock data
-const mockUsers = [
-  {
-    id: "1",
-    englishName: "John Zhang",
-    username: "zhangsan",
-    email: "zhangsan@stu.pku.edu.cn",
-    organization: "北大通班",
-    cohort: 2024,
-    role: "member",
-    createdAt: "2024-09-01",
-  },
-  {
-    id: "2",
-    englishName: "Jane Li",
-    username: "lisi",
-    email: "lisi@stu.pku.edu.cn",
-    organization: "北大通班",
-    cohort: 2023,
-    role: "member",
-    createdAt: "2024-08-15",
-  },
-  {
-    id: "3",
-    englishName: "Bob Wang",
-    username: "wangwu",
-    email: "wangwu@stu.tsinghua.edu.cn",
-    organization: "清华通班",
-    cohort: 2024,
-    role: "admin",
-    createdAt: "2024-07-20",
-  },
-  {
-    id: "4",
-    englishName: "Alice Chen",
-    username: "chenliu",
-    email: "chenliu@stu.pku.edu.cn",
-    organization: "北大通班",
-    cohort: 2022,
-    role: "member",
-    createdAt: "2024-06-10",
-  },
-  {
-    id: "5",
-    englishName: "David Liu",
-    username: "liud",
-    email: "liud@stu.tsinghua.edu.cn",
-    organization: "清华通班",
-    cohort: 2023,
-    role: "superadmin",
-    createdAt: "2024-05-01",
-  },
-]
+import { useUsers, useDeleteUser } from "@/lib/api"
+import type { User } from "@/types"
 
 const roleLabels: Record<string, string> = {
   member: "成员",
   admin: "管理员",
-  superadmin: "超级管理员",
+  super_admin: "超级管理员",
 }
 
 const roleColors: Record<string, string> = {
   member: "bg-gray-100 text-gray-800",
   admin: "bg-blue-100 text-blue-800",
-  superadmin: "bg-purple-100 text-purple-800",
+  super_admin: "bg-purple-100 text-purple-800",
+}
+
+const organizationLabels: Record<string, string> = {
+  pku: "北大通班",
+  thu: "清华通班",
 }
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string | null>(null)
+  const { confirm, ConfirmDialog } = useConfirmDialog()
 
-  const filteredUsers = mockUsers.filter((user) => {
+  // Fetch users from Convex
+  const usersData = useUsers()
+  const users = (usersData || []) as User[]
+  const deleteUserMutation = useDeleteUser()
+
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,21 +61,31 @@ export default function UsersPage() {
     return matchesSearch && matchesRole
   })
 
+  const handleDeleteUser = async (id: string, englishName: string) => {
+    await confirm({
+      title: "确认删除用户",
+      description: `将删除 ${englishName} 的账号信息。此操作不可撤销。`,
+      confirmLabel: "确认删除",
+      variant: "danger",
+      onConfirm: () => deleteUserMutation(id),
+    })
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">用户管理</h1>
           <p className="text-gray-500 mt-1">管理系统用户账号和权限</p>
         </div>
-        <Button className="bg-blue-900 hover:bg-blue-800">
-          <Plus className="h-4 w-4 mr-2" />
-          新建用户
+        <Button asChild className="bg-blue-900 hover:bg-blue-800">
+          <Link href="/admin/users/new">
+            <Plus className="h-4 w-4 mr-2" />
+            新建用户
+          </Link>
         </Button>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -135,25 +106,16 @@ export default function UsersPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setRoleFilter(null)}>
-                  全部角色
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRoleFilter("member")}>
-                  成员
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRoleFilter("admin")}>
-                  管理员
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRoleFilter("superadmin")}>
-                  超级管理员
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter(null)}>全部角色</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter("member")}>成员</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter("admin")}>管理员</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter("super_admin")}>超级管理员</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </CardContent>
       </Card>
 
-      {/* Users Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -171,18 +133,16 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user._id}>
                   <TableCell className="font-medium">{user.englishName}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell className="text-gray-500">{user.email}</TableCell>
-                  <TableCell>{user.organization}</TableCell>
+                  <TableCell>{organizationLabels[user.organization] || user.organization}</TableCell>
                   <TableCell>{user.cohort}</TableCell>
                   <TableCell>
-                    <Badge className={roleColors[user.role]}>
-                      {roleLabels[user.role]}
-                    </Badge>
+                    <Badge className={roleColors[user.role]}>{roleLabels[user.role]}</Badge>
                   </TableCell>
-                  <TableCell className="text-gray-500">{user.createdAt}</TableCell>
+                  <TableCell className="text-gray-500">{new Date(user.createdAt).toLocaleDateString("zh-CN")}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -191,15 +151,22 @@ export default function UsersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          查看详情
+                        <DropdownMenuItem asChild>
+                          <Link href={`/members/${user._id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            查看详情
+                          </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          编辑用户
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/users/${user._id}`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            编辑用户
+                          </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onSelect={() => handleDeleteUser(user._id, user.englishName)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           删除用户
                         </DropdownMenuItem>
@@ -213,11 +180,8 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          共 {filteredUsers.length} 条记录
-        </p>
+        <p className="text-sm text-gray-500">共 {filteredUsers.length} 条记录</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" disabled>
             上一页
@@ -227,6 +191,8 @@ export default function UsersPage() {
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog />
     </div>
   )
 }

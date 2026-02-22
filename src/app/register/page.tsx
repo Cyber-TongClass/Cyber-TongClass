@@ -3,27 +3,34 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { register } from "@/lib/mock-auth"
+import { normalizeUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSignUp, useSignIn, useCurrentUser } from "@/lib/api"
 
 type Organization = "pku" | "thu"
+
+const CURRENT_YEAR = new Date().getFullYear()
+const cohortOptions = Array.from({ length: CURRENT_YEAR - 2019 }, (_, idx) => CURRENT_YEAR - idx)
 
 const ORGANIZATIONS: Record<Organization, { label: string; cohorts: number[] }> = {
   pku: {
     label: "北大通班",
-    cohorts: [2025, 2024, 2023, 2022, 2021, 2020],
+    cohorts: cohortOptions,
   },
   thu: {
     label: "清华通班",
-    cohorts: [2025, 2024, 2023, 2022, 2021, 2020],
+    cohorts: cohortOptions,
   },
 }
 
 export default function RegisterPage() {
   const router = useRouter()
+  const signUp = useSignUp()
+  const signIn = useSignIn()
+  const currentUser = useCurrentUser()
   const [step, setStep] = useState(1)
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
@@ -45,6 +52,9 @@ export default function RegisterPage() {
   const [bio, setBio] = useState("")
   const [researchInterests, setResearchInterests] = useState<string[]>([])
   const [newInterest, setNewInterest] = useState("")
+  const [titles, setTitles] = useState<{ title: string; link: string }[]>([])
+  const [newTitle, setNewTitle] = useState("")
+  const [newLink, setNewLink] = useState("")
 
   const getExpectedEmailHint = () => {
     if (organization === "pku") {
@@ -137,26 +147,37 @@ export default function RegisterPage() {
     setInfo("")
 
     try {
-      const result = register({
+      // First sign up with our custom auth
+      const signUpResult = await signUp({
         email,
-        username,
+        password,
         englishName,
+        username,
         organization: organization as Organization,
         cohort: Number(cohort),
         studentId,
-        password,
-        personalEmail: personalEmail || undefined,
-        bio: bio || undefined,
-        researchInterests: researchInterests.length > 0 ? researchInterests : undefined,
       })
-      if (!result.ok) {
-        setError(result.error)
+
+      if (signUpResult === null || signUpResult === undefined) {
+        setError("Registration failed")
+        return
+      }
+
+      // Then sign in to get the session
+      const signInResult = await signIn({
+        email,
+        password,
+      })
+
+      if (signInResult === null || signInResult === undefined || !signInResult.success) {
+        setError("Registration successful but login failed. Please try logging in.")
+        router.push("/login?registered=true")
         return
       }
 
       router.push("/login?registered=true")
-    } catch {
-      setError("Registration failed")
+    } catch (err: any) {
+      setError(err.message || "Registration failed")
     } finally {
       setIsSubmitting(false)
     }
@@ -171,6 +192,17 @@ export default function RegisterPage() {
 
   const removeResearchInterest = (interest: string) => {
     setResearchInterests(researchInterests.filter(i => i !== interest))
+  }
+
+  const addTitle = () => {
+    if (!newTitle.trim() || !newLink.trim()) return
+    setTitles((prev) => [...prev, { title: newTitle.trim(), link: newLink.trim() }])
+    setNewTitle("")
+    setNewLink("")
+  }
+
+  const removeTitle = (idx: number) => {
+    setTitles((prev) => prev.filter((_, index) => index !== idx))
   }
 
   return (
@@ -432,6 +464,47 @@ export default function RegisterPage() {
                           ×
                         </button>
                       </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Title + Link (Optional)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Title (e.g., Google Scholar)"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                  />
+                  <Input
+                    type="url"
+                    placeholder="https://..."
+                    value={newLink}
+                    onChange={(e) => setNewLink(e.target.value)}
+                  />
+                  <Button type="button" variant="outline" onClick={addTitle}>
+                    Add
+                  </Button>
+                </div>
+                {titles.length > 0 && (
+                  <div className="space-y-2 mt-2">
+                    {titles.map((item, idx) => (
+                      <div key={`${item.title}-${idx}`} className="flex items-center gap-2 p-2 rounded border border-border">
+                        <span className="text-sm font-medium">{item.title}</span>
+                        <a
+                          href={normalizeUrl(item.link)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline truncate"
+                        >
+                          {item.link}
+                        </a>
+                        <Button type="button" variant="ghost" size="sm" className="ml-auto" onClick={() => removeTitle(idx)}>
+                          Remove
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}

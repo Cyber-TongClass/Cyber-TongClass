@@ -311,3 +311,41 @@ User Input → Validation → Convex Mutation → DB → Real-time Update
 ```
 User Submit → Pending Queue → Admin Review → Publish/Reject → User View
 ```
+
+---
+
+## 11. 补齐更新 (2026-02-21)
+
+### 11.1 首页轮播 Banner
+- **实现文件**: `src/app/page.tsx`
+- **新增能力**:
+  - 自动轮播与手动切换
+  - Banner 卡片含标题/摘要/跳转链接
+
+### 11.2 活动日历视图
+- **实现文件**: `src/app/events/page.tsx`
+- **新增能力**:
+  - 月历网格展示
+  - 不同活动类型颜色标识
+  - 点击色块跳转 `/events/[id]`
+
+### 11.3 高危操作确认
+- **通用组件**: `src/components/ui/confirm-dialog.tsx`
+- **接入页面**:
+  - `src/app/admin/users/page.tsx`
+  - `src/app/admin/news/page.tsx`
+  - `src/app/admin/events/page.tsx`
+  - `src/app/admin/reviews/page.tsx`
+
+### 11.4 认证体验补齐
+- **实现文件**:
+  - `src/lib/mock-auth.ts`
+  - `src/lib/hooks/use-auth.ts`
+  - `src/app/login/page.tsx`
+  - `src/app/register/page.tsx`
+  - `src/app/settings/page.tsx`
+  - `src/components/layout/navbar.tsx`
+- **新增能力**:
+  - 本地可用注册/登录/会话
+  - 登录后导航头像与菜单
+  - 资源页登录门禁

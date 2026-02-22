@@ -36,6 +36,17 @@ export function truncate(text: string, length: number): string {
   return text.slice(0, length) + '...'
 }
 
+// Normalize URL to ensure it has proper protocol
+export function normalizeUrl(url: string): string {
+  if (!url) return url
+  // If URL already has protocol, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  // Add https:// for URLs without protocol
+  return `https://${url}`
+}
+
 // Generate initials from name
 export function getInitials(name: string): string {
   return name

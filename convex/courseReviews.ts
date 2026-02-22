@@ -25,12 +25,16 @@ export const listByCourse = query({
 // Get all reviews for a course (admin only)
 export const listByCourseAll = query({
   args: {
-    courseName: v.string(),
+    courseName: v.optional(v.string()),
     status: v.optional(v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"))),
   },
   handler: async (ctx, args) => {
     let query = ctx.db.query("courseReviews")
-      .filter((q) => q.eq(q.field("courseName"), args.courseName))
+    
+    // Filter by courseName if provided
+    if (args.courseName) {
+      query = query.filter((q) => q.eq(q.field("courseName"), args.courseName))
+    }
     
     if (args.status) {
       query = query.filter((q) => q.eq(q.field("status"), args.status))
@@ -52,10 +56,11 @@ export const listPending = query({
       .query("courseReviews")
       .filter((q) => q.eq(q.field("status"), "pending"))
       .order("desc")
-      .skip(args.skip || 0)
-      .take(args.limit || 50)
       .collect()
-    return reviews
+    
+    const skip = args.skip || 0
+    const limit = args.limit || 50
+    return reviews.slice(skip, skip + limit)
   },
 })
 
@@ -99,6 +104,7 @@ export const create = mutation({
     content: v.string(),
     isAnonymous: v.optional(v.boolean()),
     authorId: v.optional(v.id("users")),
+    status: v.optional(v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"))),
   },
   handler: async (ctx, args) => {
     const reviewId = await ctx.db.insert("courseReviews", {
@@ -108,7 +114,7 @@ export const create = mutation({
       content: args.content,
       isAnonymous: args.isAnonymous ?? true,
       authorId: args.authorId,
-      status: "pending",
+      status: args.status ?? "pending",
       createdAt: Date.now(),
       updatedAt: Date.now(),
     })

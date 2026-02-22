@@ -17,12 +17,10 @@ export const list = query({
     if (args.toDate) {
       query = query.filter((q) => q.le(q.field("date"), args.toDate!))
     }
-    const events = await query
-      .order("asc")
-      .skip(args.skip || 0)
-      .take(args.limit || 50)
-      .collect()
-    return events
+    const allEvents = await query.order("asc").collect()
+    const skip = args.skip || 0
+    const limit = args.limit || 50
+    return allEvents.slice(skip, skip + limit)
   },
 })
 

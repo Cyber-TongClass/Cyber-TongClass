@@ -193,3 +193,29 @@ const reviewId = useMutation(api.courseReviews.create)({
 ### 3. 实时性
 - Convex 内置实时同步
 - 使用 useQuery 自动处理缓存和更新
+
+---
+
+## 前端本地认证接口（开发模式）
+
+为保证在未连接 Convex deployment 的本地开发环境中可运行，前端新增了本地认证工具：
+
+- **实现文件**: `src/lib/mock-auth.ts`
+- **会话 Hook**: `src/lib/hooks/use-auth.ts`
+
+### 主要方法
+
+#### `register(input)`
+本地注册账号，写入浏览器 `localStorage`。
+
+#### `signIn(identifier, password)`
+使用邮箱或用户名登录并建立本地会话。
+
+#### `signOut()`
+清除当前会话。
+
+#### `updateCurrentUser(updates)`
+更新当前登录用户资料。
+
+#### `changePassword(currentPassword, nextPassword)`
+修改当前用户密码（本地开发模式）。

@@ -19,13 +19,10 @@ export const list = query({
       query = query.filter((q) => q.eq(q.field("year"), args.year))
     }
 
-    const publications = await query
-      .order("desc")
-      .skip(args.skip || 0)
-      .take(args.limit || 50)
-      .collect()
-
-    return publications
+    const allPublications = await query.order("desc").collect()
+    const skip = args.skip || 0
+    const limit = args.limit || 50
+    return allPublications.slice(skip, skip + limit)
   },
 })
 

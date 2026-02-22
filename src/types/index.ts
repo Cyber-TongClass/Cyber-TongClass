@@ -17,6 +17,7 @@ export interface User {
   scholarUrl?: string
   orcidUrl?: string
   avatar?: string
+  realPhoto?: string
   createdAt: number
   updatedAt: number
 }
@@ -54,6 +55,8 @@ export interface CourseReview {
 export interface Course {
   _id: string
   name: string
+  instructor: string
+  department: string
   aliases?: string[] // Alternative names for merge detection
   reviewCount: number
   averageRating: number

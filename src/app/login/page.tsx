@@ -3,14 +3,15 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signIn } from "@/lib/mock-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
+import { useAuth } from "@/lib/hooks/use-auth"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login, isLoading: authLoading } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   
   const [identifier, setIdentifier] = useState("")
@@ -23,13 +24,14 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const result = signIn(identifier, password)
+      const result = await login(identifier, password)
       if (!result.ok) {
-        setError("邮箱/用户名或密码错误，请重试")
+        setError(result.error || "邮箱/用户名或密码错误，请重试")
         return
       }
-      router.push("/")
-      router.refresh()
+      
+      // 登录成功，强制页面刷新以更新状态
+      window.location.href = "/"
     } catch {
       setError("邮箱或密码错误，请重试")
     } finally {
@@ -74,7 +76,7 @@ export default function LoginPage() {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || authLoading}
                 />
               </div>
               
@@ -97,7 +99,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || authLoading}
                 />
               </div>
             </CardContent>
@@ -106,7 +108,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || authLoading}
               >
                 {isLoading ? (
                   <>

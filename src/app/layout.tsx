@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
+import Script from "next/script"
 import "@/styles/globals.css"
 import { ThemeProvider } from "@/components/providers"
-import { Navbar } from "@/components/layout/navbar"
-import { Footer } from "@/components/layout/footer"
+import { AppShell } from "@/components/layout/app-shell"
+import { ConvexAuthClientProvider } from "@/lib/convex-client"
 
 export const metadata: Metadata = {
   title: "通班官方网站 | Tong Class",
@@ -27,17 +28,34 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="font-sans">
+        <Script id="mathjax-config" strategy="beforeInteractive">
+          {`
+            window.MathJax = {
+              tex: {
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+                processEscapes: true
+              },
+              options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+              }
+            };
+          `}
+        </Script>
+        <Script
+          id="mathjax-runtime"
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+          strategy="afterInteractive"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <ConvexAuthClientProvider>
+            <AppShell>{children}</AppShell>
+          </ConvexAuthClientProvider>
         </ThemeProvider>
       </body>
     </html>

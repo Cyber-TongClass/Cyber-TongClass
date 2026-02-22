@@ -5,70 +5,7 @@ import Link from "next/link"
 import { Search, FileText, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-
-// Mock data - will be replaced with Convex API
-const mockPublications = [
-  {
-    id: "1",
-    title: "Efficient Deep Learning for Image Classification",
-    authors: ["Zhang Wei", "Li Ming", "Wang Lei"],
-    venue: "CVPR 2024",
-    year: 2024,
-    category: "Computer Vision",
-    subCategory: "image understanding",
-    url: "https://arxiv.org",
-  },
-  {
-    id: "2",
-    title: "Robust Neural Networks against Adversarial Attacks",
-    authors: ["Zhang Wei", "Chen Hao"],
-    venue: "ICML 2024",
-    year: 2024,
-    category: "Machine Learning",
-    subCategory: "theory",
-    url: "https://arxiv.org",
-  },
-  {
-    id: "3",
-    title: "Multimodal Learning for Vision-Language Tasks",
-    authors: ["Li Ming", "Liu Yang", "Zhang Wei"],
-    venue: "NeurIPS 2024",
-    year: 2024,
-    category: "Multimodal AI",
-    subCategory: "vision-language",
-    url: "https://arxiv.org",
-  },
-  {
-    id: "4",
-    title: "Scalable Distributed Training Systems",
-    authors: ["Wang Lei", "Chen Hao", "Zhang Wei"],
-    venue: "OSDI 2024",
-    year: 2024,
-    category: "AI Systems",
-    subCategory: "distributed training",
-    url: "https://arxiv.org",
-  },
-  {
-    id: "5",
-    title: "Reinforcement Learning for Robotics Control",
-    authors: ["Liu Yang", "Zhang Wei"],
-    venue: "ICRA 2024",
-    year: 2024,
-    category: "Robotics",
-    subCategory: "control",
-    url: "https://arxiv.org",
-  },
-  {
-    id: "6",
-    title: "Large Language Model Alignment",
-    authors: ["Chen Hao", "Li Ming", "Wang Lei"],
-    venue: "ICLR 2024",
-    year: 2024,
-    category: "AI Safety",
-    subCategory: "alignment",
-    url: "https://arxiv.org",
-  },
-]
+import { usePublications } from "@/lib/api"
 
 const categories = [
   { value: "all", label: "全部领域" },
@@ -96,8 +33,12 @@ export function PublicationsList() {
   const [selectedYear, setSelectedYear] = useState("all")
   const [sortBy, setSortBy] = useState<"year" | "title">("year")
 
+  // Fetch publications from Convex
+  const publicationsData = usePublications({})
+  const publications = publicationsData || []
+
   const filteredPublications = useMemo(() => {
-    return mockPublications.filter((pub) => {
+    return publications.filter((pub) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matchTitle = pub.title.toLowerCase().includes(query)
@@ -112,7 +53,7 @@ export function PublicationsList() {
       }
       return true
     })
-  }, [searchQuery, selectedCategory, selectedYear])
+  }, [publications, searchQuery, selectedCategory, selectedYear])
 
   const sortedPublications = useMemo(() => {
     return [...filteredPublications].sort((a, b) => {
@@ -183,9 +124,9 @@ export function PublicationsList() {
       {latestPublications.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">Latest Works</h2>
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {latestPublications.map((pub) => (
-              <Link key={pub.id} href={`/publications/${pub.id}`}>
+              <Link key={pub._id} href={`/publications/${pub._id}`}>
                 <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer card-hover">
                   <CardContent className="p-5">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -231,9 +172,9 @@ export function PublicationsList() {
       {archivePublications.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">Archive</h2>
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {archivePublications.map((pub) => (
-              <Link key={pub.id} href={`/publications/${pub.id}`}>
+              <Link key={pub._id} href={`/publications/${pub._id}`}>
                 <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer card-hover">
                   <CardContent className="p-5">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">

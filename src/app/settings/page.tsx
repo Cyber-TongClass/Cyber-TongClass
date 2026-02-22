@@ -1,17 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/hooks/use-auth"
-import { changePassword, updateCurrentUser } from "@/lib/mock-auth"
+import { useUpdateUser, useUserById, useCurrentUser } from "@/lib/api"
+import { normalizeUrl } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Upload, Camera, User } from "lucide-react"
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 
 export default function SettingsPage() {
   const router = useRouter()
   const { currentUser, isAuthenticated, isLoading: authLoading } = useAuth()
+  const updateUser = useUpdateUser()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
@@ -36,6 +41,50 @@ export default function SettingsPage() {
   const [newTitle, setNewTitle] = useState("")
   const [newLink, setNewLink] = useState("")
 
+  // Avatar & Real Photo
+  const [avatar, setAvatar] = useState<string | undefined>(undefined)
+  const [realPhoto, setRealPhoto] = useState<string | undefined>(undefined)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [realPhotoPreview, setRealPhotoPreview] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const realPhotoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError("头像图片大小不能超过2MB")
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const result = event.target?.result as string
+      setAvatar(result)
+      setAvatarPreview(result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRealPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError("真实照片大小不能超过2MB")
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const result = event.target?.result as string
+      setRealPhoto(result)
+      setRealPhotoPreview(result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push("/login")
@@ -51,6 +100,10 @@ export default function SettingsPage() {
       setScholarUrl(currentUser.scholarUrl || "")
       setOrcidUrl(currentUser.orcidUrl || "")
       setTitles(currentUser.titles || [])
+      setAvatar(currentUser.avatar)
+      setRealPhoto(currentUser.realPhoto)
+      if (currentUser.avatar) setAvatarPreview(currentUser.avatar)
+      if (currentUser.realPhoto) setRealPhotoPreview(currentUser.realPhoto)
     }
   }, [currentUser])
 
@@ -62,7 +115,8 @@ export default function SettingsPage() {
     setSuccessMessage("")
     
     try {
-      const result = updateCurrentUser({
+      await updateUser({
+        id: currentUser._id,
         englishName,
         personalEmail: personalEmail || undefined,
         bio: bio || undefined,
@@ -70,11 +124,8 @@ export default function SettingsPage() {
         scholarUrl: scholarUrl || undefined,
         orcidUrl: orcidUrl || undefined,
         titles: titles.length > 0 ? titles : undefined,
+        avatar,
       })
-      if (!result.ok) {
-        setError(result.error)
-        return
-      }
 
       setSuccessMessage("Profile updated successfully!")
       setTimeout(() => setSuccessMessage(""), 3000)
@@ -109,35 +160,9 @@ export default function SettingsPage() {
   }
 
   const handleChangePassword = async () => {
-    if (!currentPassword) {
-      setError("Please enter your current password")
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-    
-    if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters")
-      return
-    }
-    
-    setError("")
-    setSuccessMessage("")
-
-    const result = changePassword(currentPassword, newPassword)
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
-
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    setSuccessMessage("Password updated successfully.")
-    setTimeout(() => setSuccessMessage(""), 3000)
+    // Password change requires Convex Auth to be fully configured
+    // For now, we'll show a message that this feature needs to be implemented
+    setError("Password change is not yet available with the new authentication system. Please contact the administrator.")
   }
 
   if (authLoading) {
@@ -177,7 +202,76 @@ export default function SettingsPage() {
               Update your public profile information
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Avatar & Real Photo Upload */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Avatar */}
+              <div className="space-y-2">
+                <Label>头像 (用于个人主页等)</Label>
+                <div className="flex items-center gap-4">
+                  <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => avatarInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      上传头像
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">不超过2MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real Photo */}
+              <div className="space-y-2">
+                <Label>真实照片 (用于成员页面展示)</Label>
+                <div className="flex items-center gap-4">
+                  <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    {realPhotoPreview ? (
+                      <img src={realPhotoPreview} alt="Real Photo" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      ref={realPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleRealPhotoChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => realPhotoInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      上传照片
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">不超过2MB</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Organization</Label>
@@ -283,7 +377,7 @@ export default function SettingsPage() {
               <Label>Title & Links</Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Title (e.g., PhD Student)"
+                  placeholder="Page Title"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
@@ -301,7 +395,7 @@ export default function SettingsPage() {
                   {titles.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                       <span className="text-sm">{item.title}</span>
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                      <a href={normalizeUrl(item.link)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
                         {item.link}
                       </a>
                       <Button

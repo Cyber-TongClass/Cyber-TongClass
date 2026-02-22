@@ -2,54 +2,10 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import { Search, Filter, Users } from "lucide-react"
+import { Search, Users } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-// Mock data for demonstration - will be replaced with Convex API calls
-const mockMembers = [
-  {
-    id: "1",
-    englishName: "Zhang Wei",
-    organization: "pku" as const,
-    cohort: 2024,
-    researchInterests: ["Machine Learning", "Computer Vision"],
-    avatar: undefined,
-  },
-  {
-    id: "2",
-    englishName: "Li Ming",
-    organization: "thu" as const,
-    cohort: 2023,
-    researchInterests: ["Natural Language Processing"],
-    avatar: undefined,
-  },
-  {
-    id: "3",
-    englishName: "Wang Lei",
-    organization: "pku" as const,
-    cohort: 2022,
-    researchInterests: ["Reinforcement Learning", "Robotics"],
-    avatar: undefined,
-  },
-  {
-    id: "4",
-    englishName: "Liu Yang",
-    organization: "thu" as const,
-    cohort: 2024,
-    researchInterests: ["Multimodal AI", "Deep Learning"],
-    avatar: undefined,
-  },
-  {
-    id: "5",
-    englishName: "Chen Hao",
-    organization: "pku" as const,
-    cohort: 2021,
-    researchInterests: ["AI Safety", "Machine Learning Theory"],
-    avatar: undefined,
-  },
-]
+import { useUsers } from "@/lib/api"
 
 const organizationLabels = {
   pku: "北京大学",
@@ -58,13 +14,40 @@ const organizationLabels = {
 
 const cohortOptions = [2025, 2024, 2023, 2022, 2021, 2020]
 
+type Member = {
+  id: string
+  englishName: string
+  organization: "pku" | "thu"
+  cohort: number
+  researchInterests: string[]
+  avatar?: string
+}
+
 export function MembersList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedOrganization, setSelectedOrganization] = useState<string>("all")
   const [selectedCohort, setSelectedCohort] = useState<string>("all")
 
+  // Fetch users from Convex
+  const usersData = useUsers()
+  const users = usersData || []
+
+  // Filter users by role (member, admin, super_admin)
+  const registeredUsers = useMemo(() => {
+    return users
+      .filter((u) => u.role === "member" || u.role === "admin" || u.role === "super_admin")
+      .map((u) => ({
+        id: u._id,
+        englishName: u.englishName || u.username,
+        organization: u.organization,
+        cohort: u.cohort,
+        researchInterests: u.researchInterests || [],
+        avatar: u.avatar,
+      }))
+  }, [users])
+
   const filteredMembers = useMemo(() => {
-    return mockMembers.filter((member) => {
+    return registeredUsers.filter((member) => {
       // Search filter
       if (searchQuery && !member.englishName.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
@@ -79,7 +62,7 @@ export function MembersList() {
       }
       return true
     })
-  }, [searchQuery, selectedOrganization, selectedCohort])
+  }, [registeredUsers, searchQuery, selectedOrganization, selectedCohort])
 
   // Sort: organization (pku first), then cohort (newest first), then name
   const sortedMembers = useMemo(() => {
@@ -142,7 +125,7 @@ export function MembersList() {
 
       {/* Members grid */}
       {sortedMembers.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedMembers.map((member) => (
             <Link key={member.id} href={`/members/${member.id}`}>
               <Card className="h-full border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer card-hover">

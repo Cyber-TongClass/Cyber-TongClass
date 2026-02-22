@@ -195,3 +195,41 @@
 | 关于页 (`/about`) | 待开始 |
 
 **当前进度**: 成果页面已完成，继续下一个任务
+
+---
+
+## Agent Codex: Feature Audit & Completion Patch (2026-02-21)
+
+**职责范围**:
+- 对照 `README.md` 与 `prompt.md` 进行功能核对
+- 修复阻塞构建/运行的问题
+- 补齐关键缺失功能
+
+**完成内容**:
+- [x] 修复构建阻塞：移除线上字体依赖、修复全局 CSS 变量错误、修复 `convex/users.ts` 语法错误
+- [x] 完成首页轮播 Banner（自动轮播 + 手动切换）
+- [x] 完成活动页日历视图（按日期展示彩色 event block，可跳转详情）
+- [x] 完成本地可用注册/登录/会话/设置流程（`src/lib/mock-auth.ts`）
+- [x] 导航栏登录态切换（登录按钮 ⇄ 头像菜单）并加入资源页登录门禁
+- [x] 管理后台高危操作二次确认弹窗（用户/新闻/活动/评测删除与评测审核）
+- [x] 补充路由：`/users`、`/users/[id]`（兼容 alias）、`/forgot-password`、`/admin/settings`
+- [x] 去除 About 页 emoji，占位统一为图标
+
+**主要文件引用**:
+- `src/app/page.tsx`
+- `src/app/events/page.tsx`
+- `src/components/layout/navbar.tsx`
+- `src/lib/mock-auth.ts`
+- `src/lib/hooks/use-auth.ts`
+- `src/app/register/page.tsx`
+- `src/app/login/page.tsx`
+- `src/app/settings/page.tsx`
+- `src/app/resources/page.tsx`
+- `src/app/resources/courses/[name]/page.tsx`
+- `src/app/admin/users/page.tsx`
+- `src/app/admin/news/page.tsx`
+- `src/app/admin/events/page.tsx`
+- `src/app/admin/reviews/page.tsx`
+- `src/components/ui/dialog.tsx`
+- `src/app/layout.tsx`
+- `src/styles/globals.css`

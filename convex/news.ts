@@ -13,12 +13,10 @@ export const list = query({
     if (args.category) {
       query = query.filter((q) => q.eq(q.field("category"), args.category))
     }
-    const news = await query
-      .order("desc")
-      .skip(args.skip || 0)
-      .take(args.limit || 50)
-      .collect()
-    return news
+    const allNews = await query.order("desc").collect()
+    const skip = args.skip || 0
+    const limit = args.limit || 50
+    return allNews.slice(skip, skip + limit)
   },
 })
 
@@ -34,12 +32,10 @@ export const listAll = query({
     if (args.category) {
       query = query.filter((q) => q.eq(q.field("category"), args.category))
     }
-    const news = await query
-      .order("desc")
-      .skip(args.skip || 0)
-      .take(args.limit || 50)
-      .collect()
-    return news
+    const allNews = await query.order("desc").collect()
+    const skip = args.skip || 0
+    const limit = args.limit || 50
+    return allNews.slice(skip, skip + limit)
   },
 })
 
@@ -57,14 +53,24 @@ export const create = mutation({
   args: {
     title: v.string(),
     content: v.string(),
-    authorId: v.id("users"),
+    authorId: v.optional(v.id("users")),
     authorName: v.optional(v.string()),
     category: v.string(),
     publishedAt: v.optional(v.number()),
     isPublished: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { title, content, authorId, category } = args
+    const { title, content, category } = args
+    let authorId = args.authorId
+
+    if (!authorId) {
+      const fallbackUser = await ctx.db.query("users").first()
+      if (!fallbackUser) {
+        throw new Error("No user found to set as news author")
+      }
+      authorId = fallbackUser._id
+    }
+
     const newsId = await ctx.db.insert("news", {
       title,
       content,
@@ -86,6 +92,7 @@ export const update = mutation({
     id: v.id("news"),
     title: v.optional(v.string()),
     content: v.optional(v.string()),
+    authorName: v.optional(v.string()),
     category: v.optional(v.string()),
     publishedAt: v.optional(v.number()),
     isPublished: v.optional(v.boolean()),

@@ -63,7 +63,7 @@ export default function AboutPage() {
                   <CardContent className="p-8">
                     <h3 className="text-xl font-semibold mb-4">关于我们</h3>
                     <p className="text-muted-foreground leading-relaxed mb-4">
-                      北京大学与清华大学联合培养人工智能创新人才项目（以下简称"通班"）于2020年启动，旨在培养具有国际视野、创新能力的人工智能领域领军人才。
+                      北京大学与清华大学联合培养人工智能创新人才项目（以下简称&quot;通班&quot;）于2020年启动，旨在培养具有国际视野、创新能力的人工智能领域领军人才。
                     </p>
                     <p className="text-muted-foreground leading-relaxed">
                       项目汇聚两校优质教学资源，由顶尖学者指导，学生可在北大和清华两所顶尖学府完成学业，享受丰富的学术资源和实践机会。
@@ -151,7 +151,7 @@ export default function AboutPage() {
                   <div className="space-y-6">
                     <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
                       <div className="h-16 w-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">📱</span>
+                        <Mail className="h-8 w-8 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">官方微信公众号</h3>
@@ -163,7 +163,7 @@ export default function AboutPage() {
                     </div>
                     <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
                       <div className="h-16 w-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">🎓</span>
+                        <BookOpen className="h-8 w-8 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Bilibili 账号</h3>
@@ -175,7 +175,7 @@ export default function AboutPage() {
                     </div>
                     <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
                       <div className="h-16 w-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">💬</span>
+                        <Users className="h-8 w-8 text-primary" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Discord 社区</h3>
@@ -322,21 +322,21 @@ export default function AboutPage() {
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="text-center p-6 rounded-lg border border-dashed">
                       <div className="h-32 bg-muted/50 rounded-lg mb-4 flex items-center justify-center">
-                        <span className="text-4xl">👕</span>
+                        <Award className="h-10 w-10 text-primary/70" />
                       </div>
                       <h4 className="font-medium">文化衫</h4>
                       <p className="text-sm text-muted-foreground mt-1">即将上线</p>
                     </div>
                     <div className="text-center p-6 rounded-lg border border-dashed">
                       <div className="h-32 bg-muted/50 rounded-lg mb-4 flex items-center justify-center">
-                        <span className="text-4xl">🎓</span>
+                        <GraduationCap className="h-10 w-10 text-primary/70" />
                       </div>
                       <h4 className="font-medium">学位服</h4>
                       <p className="text-sm text-muted-foreground mt-1">即将上线</p>
                     </div>
                     <div className="text-center p-6 rounded-lg border border-dashed">
                       <div className="h-32 bg-muted/50 rounded-lg mb-4 flex items-center justify-center">
-                        <span className="text-4xl">📚</span>
+                        <BookOpen className="h-10 w-10 text-primary/70" />
                       </div>
                       <h4 className="font-medium">笔记本</h4>
                       <p className="text-sm text-muted-foreground mt-1">即将上线</p>

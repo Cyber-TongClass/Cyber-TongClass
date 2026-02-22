@@ -1,23 +1,11 @@
-import { createConvexReactClient } from "@convex-dev/react"
-import { httpBatchLink } from "@tanstack/react-query"
+"use client"
 
-// This is the client-side configuration for connecting to Convex
-// The actual Convex backend is configured in convex/ folder
+import { ConvexReactClient } from "convex/react"
+
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || ""
 
 if (!convexUrl) {
-  console.warn("NEXT_PUBLIC_CONVEX_URL is not set. Authentication may not work.")
+  console.warn("NEXT_PUBLIC_CONVEX_URL is not set. Convex features may not work as expected.")
 }
 
-export const convex = createConvexReactClient(
-  convex,
-  {
-    bridgeUrl: convexUrl,
-    globalApis: {
-      auth: ["currentUser", "currentUserRole", "isAdmin", "isSuperAdmin", "signOut"],
-    },
-  }
-)
-
-// For backwards compatibility
-export { createConvexReactClient }
+export const convex = new ConvexReactClient(convexUrl)

@@ -218,6 +218,17 @@ Convex 认证集成
 代码规范和格式化
 
 ### 3. Next.js
+
+---
+
+## 本地开发补充工具
+
+### Local Auth Store
+
+- **文件**: `src/lib/mock-auth.ts`
+- **用途**: 在未连接 Convex 后端时提供本地注册/登录/会话能力
+- **存储**: 浏览器 `localStorage`
+- **配套 Hook**: `src/lib/hooks/use-auth.ts`
 React 全栈框架
 
 ---

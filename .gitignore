@@ -41,6 +41,7 @@ next-env.d.ts
 
 # Convex
 /convexsite/
+convex/_generated/
 
 # Logs
 logs/

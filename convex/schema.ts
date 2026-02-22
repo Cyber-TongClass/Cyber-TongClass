@@ -18,6 +18,7 @@ export default defineSchema({
     scholarUrl: v.optional(v.string()),
     orcidUrl: v.optional(v.string()),
     avatar: v.optional(v.string()),
+    realPhoto: v.optional(v.string()),
     isEmailVerified: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -95,9 +96,28 @@ export default defineSchema({
   })
     .index("by_date", ["date"]),
 
+  // Courses table
+  courses: defineTable({
+    name: v.string(),
+    instructor: v.string(),
+    department: v.string(),
+    reviewCount: v.number(),
+    averageRating: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"]),
+
   // Auth config table (for pre-registered student IDs)
   authConfig: defineTable({
     allowedStudentIds: v.array(v.string()),
     updatedAt: v.number(),
   }),
+
+  // Auth credentials table (for password auth)
+  authCredentials: defineTable({
+    userId: v.id("users"),
+    passwordHash: v.string(),
+  })
+    .index("by_userId", ["userId"]),
 })

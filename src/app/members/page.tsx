@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Search, Filter, Users as UsersIcon, GraduationCap, School } from "lucide-react"
+import { Search, Users as UsersIcon, GraduationCap, School } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -14,9 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useUsers } from "@/lib/api"
+import type { User } from "@/types"
 
 // 排序函数：学校 → 年级（新→旧）→ 拼音
-function sortUsers(users: typeof mockUsers) {
+function sortUsers(users: User[]) {
   const orgOrder = { pku: 0, thu: 1 }
   
   return [...users].sort((a, b) => {
@@ -33,76 +35,8 @@ function sortUsers(users: typeof mockUsers) {
   })
 }
 
-// 模拟数据（实际使用时从 API 获取）
-const mockUsers = [
-  {
-    _id: "1" as any,
-    englishName: "Wei Zhang",
-    organization: "pku" as const,
-    cohort: 2024,
-    researchInterests: ["Machine Learning", "Computer Vision"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Wei",
-  },
-  {
-    _id: "2" as any,
-    englishName: "Lei Wang",
-    organization: "pku" as const,
-    cohort: 2024,
-    researchInterests: ["Natural Language Processing", "Deep Learning"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lei",
-  },
-  {
-    _id: "3" as any,
-    englishName: "Ming Li",
-    organization: "thu" as const,
-    cohort: 2024,
-    researchInterests: ["Reinforcement Learning", "Robotics"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ming",
-  },
-  {
-    _id: "4" as any,
-    englishName: "Jie Chen",
-    organization: "pku" as const,
-    cohort: 2023,
-    researchInterests: ["Multimodal AI", "Vision-Language"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jie",
-  },
-  {
-    _id: "5" as any,
-    englishName: "Hao Liu",
-    organization: "thu" as const,
-    cohort: 2023,
-    researchInterests: ["Generative Models", "Diffusion"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Hao",
-  },
-  {
-    _id: "6" as any,
-    englishName: "Xin Yang",
-    organization: "pku" as const,
-    cohort: 2022,
-    researchInterests: ["AI Systems", "Distributed Training"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Xin",
-  },
-  {
-    _id: "7" as any,
-    englishName: "Fang Zhou",
-    organization: "thu" as const,
-    cohort: 2022,
-    researchInterests: ["Machine Learning", "Optimization"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fang",
-  },
-  {
-    _id: "8" as any,
-    englishName: "Kai Wu",
-    organization: "pku" as const,
-    cohort: 2021,
-    researchInterests: ["AI Safety", "Interpretability"],
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kai",
-  },
-]
-
 // 获取所有唯一的研究兴趣标签
-function getAllTags(users: typeof mockUsers) {
+function getAllTags(users: User[]) {
   const tags = new Set<string>()
   users.forEach(user => {
     user.researchInterests?.forEach(interest => tags.add(interest))
@@ -116,10 +50,32 @@ export default function MembersPage() {
   const [selectedCohort, setSelectedCohort] = React.useState<string>("all")
   const [selectedTag, setSelectedTag] = React.useState<string>("all")
 
-  // 实际项目中从 API 获取数据
-  // const users = useQuery(api.users.list, {})
-  const users = mockUsers
-  
+  // Fetch users from Convex
+  const usersData = useUsers()
+  const usersFromConvex = usersData || []
+  const users: User[] = usersFromConvex.map((u) => ({
+    ...u,
+    _id: u._id,
+  }))
+
+  // Show loading state while fetching
+  if (!usersData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container-custom py-12">
+          <div className="animate-pulse">
+            <div className="h-64 bg-muted rounded-lg mb-8"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-48 bg-muted rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const allTags = getAllTags(users)
   const sortedUsers = sortUsers(users)
 
@@ -145,7 +101,8 @@ export default function MembersPage() {
   })
 
   // 年级选项
-  const cohorts = [2025, 2024, 2023, 2022, 2021, 2020]
+  const currentYear = new Date().getFullYear()
+  const cohorts = Array.from({ length: currentYear - 2019 }, (_, idx) => currentYear - idx)
 
   return (
     <div className="min-h-screen bg-background">
@@ -271,12 +228,18 @@ export default function MembersPage() {
                   <CardContent className="p-6">
                     {/* Avatar */}
                     <div className="flex justify-center mb-4">
-                      <div className="h-20 w-20 rounded-full overflow-hidden bg-muted ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all">
-                        <img
-                          src={user.avatar}
-                          alt={user.englishName}
-                          className="h-full w-full object-cover"
-                        />
+                      <div className="h-20 w-20 rounded-full overflow-hidden bg-muted ring-4 ring-primary/10 group-hover:ring-primary/30 transition-all flex items-center justify-center">
+                        {user.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt={user.englishName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl font-semibold text-primary">
+                            {(user.englishName || user.username || "U").charAt(0).toUpperCase()}
+                          </span>
+                        )}
                       </div>
                     </div>
 

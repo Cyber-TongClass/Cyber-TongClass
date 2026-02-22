@@ -5,46 +5,8 @@ import Link from "next/link"
 import { Search, FileText, Calendar, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-
-// Mock data - will be replaced with Convex API
-const mockNews = [
-  {
-    id: "1",
-    title: "通班学生获ICML最佳论文奖",
-    content: "恭喜通班学生XXX在ICML 2024获得最佳论文奖...",
-    authorName: "Zhang Wei",
-    category: "学术成果",
-    publishedAt: "2024-01-15",
-    isPublished: true,
-  },
-  {
-    id: "2",
-    title: "2024年春季学期课程安排发布",
-    content: "2024年春季学期课程安排已发布，请同学们查看...",
-    authorName: "Admin",
-    category: "课程安排",
-    publishedAt: "2024-01-10",
-    isPublished: true,
-  },
-  {
-    id: "3",
-    title: "通班学术沙龙圆满结束",
-    content: "上周举办的通班学术沙龙活动圆满结束...",
-    authorName: "Li Ming",
-    category: "活动回顾",
-    publishedAt: "2024-01-05",
-    isPublished: true,
-  },
-  {
-    id: "4",
-    title: "新学期新生见面会",
-    content: "欢迎新同学加入通班大家庭...",
-    authorName: "Admin",
-    category: "通知公告",
-    publishedAt: "2024-01-01",
-    isPublished: true,
-  },
-]
+import { useNews } from "@/lib/api"
+import type { News } from "@/types"
 
 const categories = [
   { value: "all", label: "全部分类" },
@@ -59,19 +21,23 @@ export function NewsList() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest")
 
+  // Fetch news from Convex
+  const newsData = useNews()
+  const news: News[] = newsData || []
+
   const filteredNews = useMemo(() => {
-    return mockNews.filter((news) => {
+    return news.filter((item) => {
       // Search filter
-      if (searchQuery && !news.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
       }
       // Category filter
-      if (selectedCategory !== "all" && news.category !== selectedCategory) {
+      if (selectedCategory !== "all" && item.category !== selectedCategory) {
         return false
       }
       return true
     })
-  }, [searchQuery, selectedCategory])
+  }, [news, searchQuery, selectedCategory])
 
   const sortedNews = useMemo(() => {
     return [...filteredNews].sort((a, b) => {
@@ -128,33 +94,33 @@ export function NewsList() {
           {/* Timeline line */}
           <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-px" />
           
-          <div className="space-y-6">
-            {sortedNews.map((news, index) => (
-              <div key={news.id} className={`relative flex flex-col md:flex-row ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+          <div className="space-y-8">
+            {sortedNews.map((item) => (
+              <div key={item._id} className={`relative flex flex-col md:flex-row ${sortedNews.indexOf(item) % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
                 {/* Timeline dot */}
                 <div className="absolute left-4 md:left-1/2 w-3 h-3 rounded-full bg-primary -translate-x-1/2 mt-6 z-10" />
                 
                 {/* Content */}
                 <div className="ml-10 md:ml-0 md:w-[calc(50%-2rem)]">
-                  <Link href={`/news/${news.id}`}>
+                  <Link href={`/news/${item._id}`}>
                     <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer card-hover">
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                          <span className="text-primary font-medium">{news.category}</span>
+                          <span className="text-primary font-medium">{item.category}</span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {news.publishedAt}
+                            {new Date(item.publishedAt).toLocaleDateString("zh-CN")}
                           </span>
                         </div>
-                        <CardTitle className="text-xl line-clamp-2">{news.title}</CardTitle>
+                        <CardTitle className="text-xl line-clamp-2">{item.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {news.content}
+                          {item.content}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <User className="h-3 w-3" />
-                          {news.authorName}
+                          {item.authorName}
                         </div>
                       </CardContent>
                     </Card>
