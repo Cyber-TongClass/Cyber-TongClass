@@ -42,9 +42,12 @@ next-env.d.ts
 # Convex
 /convexsite/
 convex/_generated/
+.convex/
 
 # Logs
 logs/
 *.log
 
 node_modules/
+prompt.md
+README_old.md
