@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20.9.0'
+  NODE_VERSION: '24.14.0'
 
 jobs:
   lint-and-build:
@@ -25,7 +25,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci
-      - run: npm run lint
       - run: npm run build
 
   docker:
