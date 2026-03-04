@@ -33,8 +33,6 @@ jobs:
       - run: npm ci
       - name: Generate Convex API
         env:
-          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
         run: npx convex codegen
       - run: npm run build
@@ -50,8 +48,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate Convex API (for Docker build)
         env:
-          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
         run: npx convex codegen
       - uses: docker/setup-buildx-action@v3
